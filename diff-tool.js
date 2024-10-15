@@ -15,35 +15,25 @@ program
   .option('-o, --output <outputPath>', 'Output path for the generated HTML file', './diff-output.html')
   .action(async (repoPath, baseBranch, prBranch, keyword, options) => {
     try {
-      // Initialize the Git repository in the specified path
       const repoAbsolutePath = path.resolve(repoPath);
       const git = simpleGit(repoAbsolutePath);
 
-      // Check out the base branch and pull request branch to get the diff
       await git.checkout(baseBranch);
       const baseCommit = await git.revparse('HEAD');
       
       await git.checkout(prBranch);
       const prCommit = await git.revparse('HEAD');
 
-      // Get the diff between the two branches
       const diff = await git.diff([`${baseCommit}`, `${prCommit}`]);
-
-      // Parse the diff using Diff2Html API
       const diffJson = Diff2Html.parse(diff);
-
-      // Filter the changes that contain the keyword
       const filteredDiff = diffJson.map(file => {
         file.blocks = file.blocks.filter(block => 
           block.lines.some(line => line.content.includes(keyword))
         );
         return file;
       }).filter(file => file.blocks.length > 0);
-
-      // Generate the HTML for the filtered diff using Diff2Html.html()
       const diffHtmlContent = Diff2Html.html(filteredDiff, { inputFormat: 'json', outputFormat: 'line-by-line' });
 
-      // Write the full HTML content
       const diffHtml = `
       <!DOCTYPE html>
       <html lang="en">
@@ -73,15 +63,12 @@ program
       </html>
       `;
 
-      // Write the HTML content to the specified file
       const outputFilePath = path.resolve(options.output);
       fs.writeFileSync(outputFilePath, diffHtml);
-
       console.log(`Diff with keyword "${keyword}" written to ${outputFilePath}`);
     } catch (error) {
       console.error('Error:', error);
     }
   });
 
-// Parse the arguments from the command line
 program.parse(process.argv);
