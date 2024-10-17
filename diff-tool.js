@@ -11,10 +11,14 @@ program
   .argument('<repoPath>', 'Path to the Git repository')
   .argument('<baseBranch>', 'The base branch to compare')
   .argument('<prBranch>', 'The pull request branch to compare')
-  .argument('<keyword>', 'Keyword to search in the diff')
+  .argument('<keywords>', 'Comma-separated keywords to search in the diff')
   .option('-o, --output <outputPath>', 'Output path for the generated HTML file', './diff-output.html')
+  .option('-s, --separator <separator>', 'Separator for keywords', ',')
   .action(async (repoPath, baseBranch, prBranch, keyword, options) => {
     try {
+      const separator = options.separator || ',';
+      const keywords = keyword.split(separator).map(kw => kw.trim());
+
       const repoAbsolutePath = path.resolve(repoPath);
       const git = simpleGit(repoAbsolutePath);
 
@@ -28,7 +32,9 @@ program
       const diffJson = Diff2Html.parse(diff);
       const filteredDiff = diffJson.map(file => {
         file.blocks = file.blocks.filter(block => 
-          block.lines.some(line => line.content.includes(keyword))
+          block.lines.some(line => 
+            keywords.some(kw => line.content.includes(kw))
+          )
         );
         return file;
       }).filter(file => file.blocks.length > 0);
@@ -65,7 +71,7 @@ program
 
       const outputFilePath = path.resolve(options.output);
       fs.writeFileSync(outputFilePath, diffHtml);
-      console.log(`Diff with keyword "${keyword}" written to ${outputFilePath}`);
+      console.log(`Diff for search input "${keyword}" written to ${outputFilePath}`);
     } catch (error) {
       console.error('Error:', error);
     }

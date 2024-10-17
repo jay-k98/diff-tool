@@ -9,3 +9,9 @@ A simple tool to search for a keyword in a git diff and show highlighted markup 
 
 ### Example
     node diff-tool.js ~/projects/my-project dev fix-typo tpyo -o ~/Desktop/fix-typo-diff.html
+
+You can also search for multiple keywords by separating them with a comma
+    node diff-tool.js ~/projects/my-project dev fix-typo tpyo,mistkae -o ~/Desktop/fix-typo-diff.html
+
+To define a custom separator use the flag `-s`
+    node diff-tool.js ~/projects/my-project dev fix-typo "tpyo;mistkae" -o ~/Desktop/fix-typo-diff.html -s ";"
